@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - uses: pre-commit/action@v3 # 自动安装并运行 .pre-commit-config.yaml 里全部 hooks
+      - uses: pre-commit/action@v3.0.1 # 自动安装并运行 .pre-commit-config.yaml 里全部 hooks（该仓库无 v3 浮动 tag，必须 pin 小版本）
 
   test:
     name: Test (Node ${{ matrix.node }})

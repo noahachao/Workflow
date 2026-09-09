@@ -1,0 +1,42 @@
+# 安全扫描（免费，私有仓库可用）：密钥泄露 + 依赖漏洞
+# CodeQL 属付费 GHAS 仅公开仓库免费（见 codeql.yml），这里是私有仓库的安全兜底。
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write # 上传结果到 Security 标签页
+
+jobs:
+  gitleaks:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 扫全历史
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # 个人（1 committer）免费；组织多成员时需 license
+
+  audit:
+    name: Dependency audit (npm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: npm audit（发现高危漏洞则失败）
+        run: |
+          # 允许 low/中危告警，高危(hign)/严重(critical) 直接让 CI 红
+          npm audit --audit-level=high
