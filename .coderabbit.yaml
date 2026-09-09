@@ -1,0 +1,27 @@
+# CodeRabbit AI Code Review 配置
+# 前提：安装 GitHub App https://github.com/apps/coderabbitai（公开仓库免费）
+# 文档：https://docs.coderabbit.ai/reference/configuration
+
+language: zh-CN            # 审查评论使用中文
+
+reviews:
+  profile: chill           # 轻量模式（噪音少）；想要严格把关可改 strict
+  high_level_summary: true # PR 概览
+  review_status: true      # 显示 通过/需修改 状态
+  poem: false              # 不要诗 😄
+  auto_review:
+    enabled: true          # 每个新 PR 自动审查
+    drafts: false          # 草稿 PR 不审
+  # 按路径定制审查重点：
+  path_instructions:
+    - path: "src/**"
+      instructions: "重点检查边界条件、错误处理与测试覆盖。"
+    - path: ".github/workflows/**"
+      instructions: "重点检查权限最小化与安全（pin SHA、避免 pull_request_target）。"
+
+chat:
+  auto_reply: true         # 在 PR 里回复 @coderabbitai 的提问
+
+# 想让 CodeRabbit 作为 required check 阻止低质量合并？打开下面两项：
+#   request_changes_workflow: true
+#   fail_commit_draft: true

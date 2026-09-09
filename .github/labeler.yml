@@ -1,0 +1,21 @@
+# actions/labeler 规则：按 PR 改动路径自动打标签
+# 文档：https://github.com/actions/labeler
+ci:
+  - changed-files:
+      - any-glob-to-any-file: [".github/**", "*.yaml", "*.yml"]
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.md", "docs/**"]
+
+source:
+  - changed-files:
+      - any-glob-to-any-file: ["src/**", "tests/**"]
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: ["package.json", "package-lock.json"]
+
+build:
+  - changed-files:
+      - any-glob-to-any-file: ["scripts/**"]

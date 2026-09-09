@@ -1,0 +1,23 @@
+# pre-commit：本地 `git commit` 时自动运行，CI 中由 pre-commit/action 再跑一遍
+# 安装：pip install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace        # 去行尾空格
+      - id: end-of-file-fixer          # 文件末尾补换行
+      - id: check-yaml                 # YAML 语法检查
+      - id: check-json                 # JSON 语法检查
+      - id: check-added-large-files    # 防误提交大文件
+      - id: check-merge-conflict       # 防提交冲突标记
+      - id: detect-private-key         # 防误提交私钥
+
+  # 按语言扩展（示例）：
+  # - repo: https://github.com/pre-commit/mirrors-prettier
+  #   rev: v3.1.0
+  #   hooks:
+  #     - id: prettier
+  # - repo: https://github.com/eslint/eslint
+  #   rev: v9.0.0
+  #   hooks:
+  #     - id: eslint

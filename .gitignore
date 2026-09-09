@@ -1,0 +1,15 @@
+# 依赖与构建产物
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# 环境变量与密钥（永远不提交）
+.env
+.env.*
+*.pem
+*.key
+
+# 本地工具缓存
+.pre-commit-cache/
+__pycache__/

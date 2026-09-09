@@ -1,0 +1,58 @@
+# Release：打 tag → 测试 → 构建 → GitHub Release → 部署（CD 挂载点）
+# 用法：git tag v0.1.0 && git push origin v0.1.0
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write # 创建 Release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true # 自动生成 changelog
+          files: dist/**
+
+      # ============ 部署段（按你的平台放开一个） ============
+
+      # --- Vercel ---
+      # - name: Deploy to Vercel
+      #   run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      # --- Cloudflare Workers/Pages ---
+      # - name: Deploy to Cloudflare
+      #   uses: cloudflare/wrangler-action@v3
+      #   with:
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      # --- Docker 镜像 ---
+      # - name: Build & push Docker image
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+
+      # --- SSH 服务器 rsync ---
+      # - name: Deploy via SSH
+      #   uses: appleboy/scp-action@v1
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }}
+      #     username: ${{ secrets.SSH_USER }}
+      #     key: ${{ secrets.SSH_KEY }}
+      #     source: "dist/*"
+      #     target: /var/www/app

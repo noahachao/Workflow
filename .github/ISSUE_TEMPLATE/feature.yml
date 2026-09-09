@@ -1,0 +1,37 @@
+name: ✨ 功能建议
+description: 想要新能力 — AI 员工可以做这个！
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决什么问题？
+      description: 先说问题，再说方案
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 期望的解决方案
+      description: 越具体越好 —— AI coding agent 会照着这个实现
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: 预估规模
+      options:
+        - 小（一处改动）
+        - 中（一个模块）
+        - 大（跨模块）
+      default: 0
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准（完成后怎么算好）
+      placeholder: |
+        - [ ] …
+        - [ ] …

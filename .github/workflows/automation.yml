@@ -1,0 +1,26 @@
+# Housekeeping：定期清理不活跃的 Issue / PR，保持看板干净
+name: Housekeeping
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # 每周一 03:00 UTC
+  workflow_dispatch: # 支持手动触发
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-stale: 30       # 30 天无活动标记为 stale
+          days-before-close: 7        # 再过 7 天仍无活动则关闭
+          stale-issue-message: "⚠️ 此 Issue 已 30 天无活动，7 天内无回应将自动关闭。仍需处理请评论或加 `pinned` 标签。"
+          stale-pr-message: "⚠️ 此 PR 已 30 天无活动，7 天内无回应将自动关闭。"
+          exempt-issue-labels: "pinned,roadmap,enhancement"
+          exempt-pr-labels: "pinned"
+          stale-issue-label: "stale"
+          stale-pr-label: "stale"

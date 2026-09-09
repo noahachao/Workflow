@@ -1,0 +1,36 @@
+name: 🐛 Bug 报告
+description: Something is broken — 帮我修！
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么？
+      description: 期望行为 vs 实际行为
+      placeholder: |
+        期望：…
+        实际：…
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 报错信息
+      render: shell
+
+  - type: input
+    id: env
+    attributes:
+      label: 环境（版本 / OS / Node）
+      placeholder: "Node 22 / macOS 15 / v0.1.0"

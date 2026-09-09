@@ -1,0 +1,35 @@
+# CodeQL：GitHub 官方静态安全分析（SAST）
+# 免费用于公开与私有仓库；还能发现 workflow 自身的安全问题
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "30 2 * * 5" # 每周五 02:30 UTC 定期全量扫描
+
+permissions:
+  security-events: write # 上传 SARIF 结果到 Security 标签页
+  contents: read
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 按项目语言增删：javascript-typescript / python / go / java-kotlin ...
+        language: [javascript-typescript]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended # 更严格的安全查询集
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
