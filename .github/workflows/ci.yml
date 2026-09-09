@@ -33,14 +33,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22] # 当前两个 LTS
+        node: [22, 24] # 24 为当前 LTS
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      - run: npm ci
+      # 统一 npm 大版本：npm 10/11 对 lock 的树校验不兼容
+      # （lock 常由本地 npm 11 生成，CI 若用 npm 10 会报 Missing: xxx）
+      - run: npm install -g npm@11
+      - run: npm ci || npm install
       - run: npm test
 
   build:

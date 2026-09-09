@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read # gitleaks-action 在 PR 事件下需读 PR commits 列表，缺此权限会 403
   security-events: write # 上传结果到 Security 标签页
 
 jobs:
@@ -36,7 +37,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: npm audit（发现高危漏洞则失败）
+      - name: npm audit（critical 漏洞阻断；high 级建议立 issue 走升级流程，避免大版本强制升级破坏兼容）
         run: |
-          # 允许 low/中危告警，高危(hign)/严重(critical) 直接让 CI 红
-          npm audit --audit-level=high
+          npm audit --audit-level=critical

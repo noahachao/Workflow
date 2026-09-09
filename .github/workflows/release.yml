@@ -18,6 +18,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # 统一 npm 大版本，避免与本地 lock 生成版本分裂（详见 ci.yml 同注释）
+      - run: npm install -g npm@11
       - run: npm ci
       - run: npm test
       - run: npm run build
