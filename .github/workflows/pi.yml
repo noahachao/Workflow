@@ -1,0 +1,109 @@
+# Pi：@pi 机器人 —— 在 Issue/PR 评论里 @pi，本地同款 coding agent 在云端干活
+# pi 文档：https://pi.dev  |  npm: @earendil-works/pi-coding-agent
+#
+# 前提：仓库 Settings → Secrets → Actions 添加任一模型的 API Key，例如：
+#   ANTHROPIC_API_KEY（或 OPENAI_API_KEY / GEMINI_API_KEY / DEEPSEEK_API_KEY ...）
+#   pi 支持几十家 provider，见 README 的 Providers & Models 一节。
+#
+# 注意：CI 里只能用 API key（按 token 计费）；本地才能用订阅登录（/login）。
+name: Pi
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  pi:
+    # 仅当评论包含 @pi 时触发，平时零消耗
+    if: contains(github.event.comment.body, '@pi')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push 分支
+      pull-requests: write # 创建/更新 PR
+      issues: write # 回复评论
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare branch (issue vs PR context)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          git config user.name "pi-bot"
+          git config user.email "pi-bot@users.noreply.github.com"
+          # 评论在 PR 上 → 检出该 PR 分支继续改；在 Issue 上 → 新建工作分支
+          if gh pr view "$ISSUE_NUMBER" >/dev/null 2>&1; then
+            echo "CONTEXT=pr" >> "$GITHUB_ENV"
+            gh pr checkout "$ISSUE_NUMBER"
+          else
+            echo "CONTEXT=issue" >> "$GITHUB_ENV"
+            git checkout -b "pi/issue-$ISSUE_NUMBER"
+          fi
+
+      - name: Run pi
+        env:
+          # ★ 换 provider 时同步修改这里（对应你配置的 secret）
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          COMMENT: ${{ github.event.comment.body }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          CONTEXT: ${{ env.CONTEXT }}
+        run: |
+          npx -y @earendil-works/pi-coding-agent -p "
+          你是在仓库中工作的 coding agent。遵守 AGENTS.md 的全部硬性规则。
+
+          任务（来自 GitHub ${CONTEXT} #${ISSUE_NUMBER}《${ISSUE_TITLE}》）：
+          ${COMMENT}
+
+          Issue 详情：
+          ${ISSUE_BODY}
+
+          要求：
+          1. 实现任务并附带测试，npm test 必须全绿
+          2. 提交改动（不要 push）
+          3. 只做任务要求的事，不做无关重构
+          "
+
+      - name: Push & open PR (issue 场景)
+        if: env.CONTEXT == 'issue'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          if git diff --cached --quiet && git diff --quiet; then
+            gh issue comment "$ISSUE_NUMBER" --body "π 无改动产生，请检查任务描述。"
+            exit 0
+          fi
+          git push -u origin "pi/issue-$ISSUE_NUMBER"
+          gh pr create \
+            --title "fix #${ISSUE_NUMBER}: $(git log -1 --format=%s)" \
+            --body "由 @pi 根据 #${ISSUE_NUMBER} 自动实现。Closes #${ISSUE_NUMBER}" \
+            --base main
+
+      - name: Push updates (PR 场景)
+        if: env.CONTEXT == 'pr'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          if git diff --cached --quiet && git diff --quiet; then
+            gh pr comment "$ISSUE_NUMBER" --body "π 无改动产生。"
+            exit 0
+          fi
+          git commit -m "pi: 后续修改" >/dev/null 2>&1 || true
+          git push
+          gh pr comment "$ISSUE_NUMBER" --body "π 已按评论更新。"
+
+# ⚠️ 安全提示：Issue/评论内容会进入 prompt，存在 prompt injection 风险。
+# 本 workflow 只在人工 @pi 时触发、产物仍需过 CI + 人工 review 才能合并（分支保护），
+# 请保持"AI 无合并权"的原则。更严格时可加 allowlist 只响应特定用户。

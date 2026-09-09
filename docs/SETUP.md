@@ -59,6 +59,18 @@
 2. 仓库 **Settings → Secrets and variables → Actions → New repository secret**：名称 `ANTHROPIC_API_KEY`
 3. 之后在任何 Issue / PR 评论 `@claude <任务>` 即可。
 
+## 6b. @pi 机器人（可选，用你熟悉的 pi agent）
+
+不想绑死 Anthropic/OpenAI？模板里的 `pi.yml` 把本地同款 [pi](https://pi.dev) 搬进 Actions：
+
+1. 仓库 **Settings → Secrets → Actions** 添加任一 provider 的 key（`ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` / `DEEPSEEK_API_KEY` …）。
+2. 如果用的不是 Anthropic，同步修改 `pi.yml` 中 Run pi 步骤的 env 行。
+3. 之后在任何 **Issue 评论 `@pi 实现这个需求`** → 它新建分支、写代码、开 PR；
+   在 **PR 评论 `@pi 按评审意见修改`** → 它直接在 PR 分支上继续迭代。
+
+> 本地零成本玩法（无需任何云端 key）：直接在本地 pi 会话里说
+> “看 #12 这个 issue，实现它并用 gh 开 PR”，pi 会用 bash 工具自己完成全流程。
+
 ## 7. GitHub Projects 看板自动化
 
 1. 仓库页 **Projects → New project → Board**。

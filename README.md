@@ -31,6 +31,7 @@
 | `.github/workflows/automation.yml` | 定时清理不活跃 issue/PR（housekeeping） | 无 |
 | `.github/workflows/release.yml` | 打 tag 自动发布 GitHub Release（CD 挂载点） | 按需改部署段 |
 | `.github/workflows/claude.yml` | `@claude` 机器人：改代码 / 修 bug / 回答问题 | 配置 secret 后可用 |
+| `.github/workflows/pi.yml` | `@pi` 机器人：本地同款 pi agent 云端干活（Issue→PR / PR 迭代） | 配置任一模型 API key |
 | `.coderabbit.yaml` | CodeRabbit AI Code Review 配置 | 安装 CodeRabbit App（开源免费） |
 | `.github/dependabot.yml` | 依赖自动升级（npm + Actions） | 无 |
 | `.github/labeler.yml` | PR 打标签规则 | 无 |
