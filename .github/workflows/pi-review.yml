@@ -1,0 +1,66 @@
+# AI Review：每个新 PR 自动由 pi 出中文逐行审查报告
+# ★ 全免费方案：用 Gemini 免费 API key（aistudio.google.com 申请，无需信用卡）
+#   免费层限额：15 次/分钟、1500 次/天，PR 审查完全够用
+# 也可换任何 provider：把 env 与 --provider/--model 改成你的（openai/anthropic/deepseek...）
+name: AI Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pull-requests: write # 发审查评论
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 需要 diff 历史
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate diff
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr.diff
+          wc -l /tmp/pr.diff
+          # 防超长：截断到 50K 字符（约 1500 行）
+          head -c 50000 /tmp/pr.diff > /tmp/pr_trunc.diff
+
+      - name: Review with pi
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          npx -y @earendil-works/pi-coding-agent \
+            --provider google \
+            -p "你是资深代码审查员，用中文审查这个 PR。严格遵守：只报告有把握的问题，不确定的不写；每条给出行号或文件名。
+
+          PR 标题：${PR_TITLE}
+          diff 内容如下：
+
+          $(cat /tmp/pr_trunc.diff)
+
+          输出 markdown 格式审查报告：
+          ## 审查总结
+          一句话结论（可合并 / 建议修改 / 需要返工）
+          ## 🔴 严重问题（bug/安全/数据丢失风险）
+          ## 🟡 建议改进
+          ## 🟢 亮点（最多 3 条）
+          若某类没有内容就写'无'。不要输出 diff 之外的寒暄。" \
+            > /tmp/review.md
+
+          # pi 输出末尾附评论命令
+          gh pr comment "$PR_NUMBER" --body-file /tmp/review.md
+
+# 说明：
+# - 没配置 GEMINI_API_KEY 时此 job 会失败；不想用 AI 审查可直接删除本文件。
+# - Dependabot 的 PR 也会被审查（其 token 可读 PR，评论不受限）。
+# - 想要更强审查质量：换 --provider anthropic + 对应 key（按量付费）。
