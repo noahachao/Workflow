@@ -1,5 +1,5 @@
-# 默认审查人 —— ★ 必改：把 YOUR_USERNAME 换成你的 GitHub 用户名 ★
+# 默认审查人 —— ★ 必改：把 noahachao 换成你的 GitHub 用户名 ★
 # 多人参与时按路径指定领域负责人，例如：
-# /src/    @YOUR_USERNAME
+# /src/    @noahachao
 # /infra/  @infra-lead
-* @YOUR_USERNAME
+* @noahachao
