@@ -34,11 +34,13 @@ gen_test_job() {
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: { node: [20, 22] }
+      matrix: { node: [22, 24] }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "${{ matrix.node }}", cache: npm }
+      # 统一 npm 大版本：npm 10/11 对 lock 树校验不兼容（详见模板 ci.yml）
+      - run: npm install -g npm@11
       - run: npm ci || npm install
       - run: npm test --if-present
 EOF
