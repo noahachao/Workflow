@@ -15,19 +15,28 @@ permissions:
 
 jobs:
   review:
-    # 未配置 GEMINI_API_KEY 时自动跳过（而不是报错）
-    if: ${{ secrets.GEMINI_API_KEY != '' }}
     runs-on: ubuntu-latest
     steps:
+      # 未配置 GEMINI_API_KEY 时自动跳过（而不是报错）
+      # 注：job 级 if 不允许引用 secrets 上下文（会致 workflow 解析失败），必须放 step 级
+      - name: 检查 API key
+        id: keycheck
+        env:
+          HAS_KEY: ${{ secrets.GEMINI_API_KEY != '' }}
+        run: echo "ok=$HAS_KEY" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
+        if: steps.keycheck.outputs.ok == 'true'
         with:
           fetch-depth: 0 # 需要 diff 历史
 
       - uses: actions/setup-node@v4
+        if: steps.keycheck.outputs.ok == 'true'
         with:
           node-version: 22
 
       - name: Generate diff
+        if: steps.keycheck.outputs.ok == 'true'
         run: |
           git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr.diff
           wc -l /tmp/pr.diff
@@ -35,6 +44,7 @@ jobs:
           head -c 50000 /tmp/pr.diff > /tmp/pr_trunc.diff
 
       - name: Review with pi
+        if: steps.keycheck.outputs.ok == 'true'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ github.token }}
