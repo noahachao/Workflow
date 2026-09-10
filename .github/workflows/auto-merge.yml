@@ -1,0 +1,43 @@
+# 标签式自动合并（免费替代 GitHub Pro 的分支保护 + auto-merge）
+# 用法：PR 上打 approved 标签 = 你的签章 → 本 workflow 等 CI 全绿 → 自动 squash 合并并删分支
+# 双通道：①事件触发（打标签/新提交，秒级） ②每 5 分钟轮询兜底（API 打标签不触发 labeled 事件的怪癖免疫）
+# 安全性：只有对仓库有写权限的人（你）能打标签；CI 有红灯则拒绝合并
+name: Auto Merge (approved)
+
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+  schedule:
+    - cron: "*/5 * * * *" # 轮询兜底：扫一遍所有带 approved 标签的开放 PR
+  workflow_dispatch: # 支持手动触发（测试用）
+
+permissions:
+  contents: write # 合并 + 删分支
+  pull-requests: write
+
+jobs:
+  merge:
+    name: 扫描已签章 PR 并合并
+    # 事件模式下仅处理带 approved 标签的 PR；轮询/手动模式直接全量扫描
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.state == 'open' &&
+       contains(join(github.event.pull_request.labels.*.name, ','), 'approved'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: 扫描带 approved 标签的 PR，等 CI 全绿后合并
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          PRS=$(gh pr list -R "$REPO" --label approved --state open --json number --jq '.[].number' || true)
+          if [ -z "${PRS:-}" ]; then echo "无待合并 PR"; exit 0; fi
+          for NUM in $PRS; do
+            echo "── PR #$NUM：等待检查 ──"
+            if gh pr checks "$NUM" -R "$REPO" --watch --fail-fast --interval 15; then
+              gh pr merge "$NUM" -R "$REPO" --squash --delete-branch && echo "✅ #$NUM 已合并"
+            else
+              echo "::warning::PR #$NUM 有未通过的检查，跳过（下次轮询重试）"
+            fi
+          done
