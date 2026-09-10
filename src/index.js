@@ -11,6 +11,10 @@ export function greet(name) {
   return `你好，${name}！`;
 }
 
+export function multiply(a, b) {
+  return a * b;
+}
+
 export function subtract(a, b) {
   return a - b;
 }
