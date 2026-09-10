@@ -59,7 +59,7 @@ jobs:
       - run: npm run build
 
       # 可选：构建产物上传（供 release / 部署 job 复用）
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-${{ github.sha }}
           path: dist/
