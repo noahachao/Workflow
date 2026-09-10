@@ -48,9 +48,18 @@ jobs:
               --jq '[.[] | select(.name != "扫描已签章 PR 并合并") | select(.state != "SUCCESS")] | length' 2>/dev/null) || NOT_GREEN=1
             if [ "${NOT_GREEN:-1}" = "0" ]; then
               # 单个 PR 合并失败（ruleset 拒/冲突/竞态）只告警，不炸循环
-              gh pr merge "$NUM" -R "$REPO" --squash --delete-branch \
-                && echo "✅ #$NUM 已合并" \
-                || echo "::warning::#$NUM 合并被拒，下轮再看"
+              if gh pr merge "$NUM" -R "$REPO" --squash --delete-branch; then
+                echo "✅ #$NUM 已合并"
+                # GITHUB_TOKEN 创建的 PR，其 Closes #N 会被 GitHub 忽略（防机器人递归）——补刀关 issue
+                ISSUE=$(gh pr view "$NUM" -R "$REPO" --json title --jq '.title' | grep -oE '#[0-9]+' | head -1 | tr -d '#')
+                if [ -n "$ISSUE" ]; then
+                  gh issue close "$ISSUE" -R "$REPO" --comment "已由 PR #$NUM（@pi 自动实现）合并关闭。" >/dev/null 2>&1 \
+                    && echo "✅ issue #$ISSUE 已随合并关闭" \
+                    || echo "::warning::#$ISSUE 关闭失败（可能已关或非 issue PR），下轮再看"
+                fi
+              else
+                echo "::warning::#$NUM 合并被拒，下轮再看"
+              fi
             else
               echo "::warning::PR #$NUM 有 $NOT_GREEN 项未全绿（真 CI），下轮再看"
             fi
