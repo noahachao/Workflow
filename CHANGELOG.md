@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/noahachao/Workflow/compare/v1.0.0...v1.0.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* 仓库名从 remote 提取（目录名≠仓库名时降频探测 404） ([#16](https://github.com/noahachao/Workflow/issues/16)) ([78d9fd8](https://github.com/noahachao/Workflow/commit/78d9fd84a35b450c288bfff8afc1f9f0a5b9a12b))
+
 ## 1.0.0 (2026-09-10)
 
 
