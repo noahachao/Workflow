@@ -26,7 +26,7 @@ jobs:
           results_file: results.sarif
           results_format: sarif
           # 发布到公开排行榜（公开库专属福利，可获得徽章）
-          publish_results: true
+          publish_results: false
 
       - name: 上传 SARIF 到代码扫描
         uses: github/codeql-action/upload-sarif@v3
