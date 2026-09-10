@@ -88,7 +88,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          if ! git status --porcelain | grep -q .; then
+          # 检测产出：比较当前分支与 main 的 commit 差（pi 会先 commit，工作区可能已干净）
+          if git rev-list --count origin/main..HEAD | grep -q '^0$'; then
             gh issue comment "$ISSUE_NUMBER" --body "π 无改动产生，请检查任务描述。"
             exit 0
           fi
@@ -104,11 +105,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          if ! git status --porcelain | grep -q .; then
+          # 同上：以 commit 差为准；若有未提交改动（pi 未 commit）则补一个 commit
+          NEED=0
+          [ "$(git rev-list --count origin/main..HEAD)" -gt 0 ] 2>/dev/null && NEED=1
+          git status --porcelain | grep -q . && NEED=1
+          if [ "$NEED" = "0" ]; then
             gh pr comment "$ISSUE_NUMBER" --body "π 无改动产生。"
             exit 0
           fi
-          git commit -m "pi: 后续修改" >/dev/null 2>&1 || true
+          git commit -am "pi: 后续修改" >/dev/null 2>&1 || true
           git push
           gh pr comment "$ISSUE_NUMBER" --body "π 已按评论更新。"
 
