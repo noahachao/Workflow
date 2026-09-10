@@ -34,10 +34,11 @@ jobs:
           PRS=$(gh pr list -R "$REPO" --label approved --state open --json number --jq '.[].number' || true)
           if [ -z "${PRS:-}" ]; then echo "无待合并 PR"; exit 0; fi
           for NUM in $PRS; do
-            echo "── PR #$NUM：等待检查 ──"
-            if gh pr checks "$NUM" -R "$REPO" --watch --fail-fast --interval 15; then
+            echo "── PR #$NUM：检查当前状态 ──"
+            # 单次快照：全绿退出 0；有 pending/红灯非 0 → 跳过，下轮轮询再看（不阻塞等待）
+            if gh pr checks "$NUM" -R "$REPO" --fail-fast; then
               gh pr merge "$NUM" -R "$REPO" --squash --delete-branch && echo "✅ #$NUM 已合并"
             else
-              echo "::warning::PR #$NUM 有未通过的检查，跳过（下次轮询重试）"
+              echo "::warning::PR #$NUM 检查未全绿（或尚在进行），下轮再看"
             fi
           done
