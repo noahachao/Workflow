@@ -12,7 +12,6 @@ on:
 permissions:
   security-events: write # 上传 SARIF 扫描结果
   contents: read
-  id-token: write # 发布公开评分（api.scorecard.dev）
 
 jobs:
   analysis:

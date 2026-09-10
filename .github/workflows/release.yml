@@ -6,6 +6,10 @@ on:
   release:
     types: [published]
 
+# ⚠️ 已知限制：GITHUB_TOKEN 创建的 Release 不触发 on: release workflow（GitHub 防递归设计），
+# 故 release-please（用 GITHUB_TOKEN）发的版不会跑本流程、产物不上传。
+# 根治：release-please 换 fine-grained PAT（secrets.RELEASE_PAT），发版即全自动挂产物。
+
 permissions:
   contents: write # 创建 Release
 

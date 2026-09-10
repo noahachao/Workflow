@@ -14,8 +14,12 @@ on:
 
 jobs:
   pi:
-    # 仅当评论包含 @pi 时触发，平时零消耗
-    if: contains(github.event.comment.body, '@pi')
+    # 双重门禁：①评论含 @pi ②评论者是 OWNER/COLLABORATOR
+    # （公开仓库下若只看内容，任何陌生人都能烧你的 API key + 驱动 write 权限）
+    if: >-
+      contains(github.event.comment.body, '@pi') &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'COLLABORATOR')
     runs-on: ubuntu-latest
     permissions:
       contents: write # push 分支
@@ -80,7 +84,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          if git diff --cached --quiet && git diff --quiet; then
+          if ! git status --porcelain | grep -q .; then
             gh issue comment "$ISSUE_NUMBER" --body "π 无改动产生，请检查任务描述。"
             exit 0
           fi
@@ -96,7 +100,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          if git diff --cached --quiet && git diff --quiet; then
+          if ! git status --porcelain | grep -q .; then
             gh pr comment "$ISSUE_NUMBER" --body "π 无改动产生。"
             exit 0
           fi
@@ -105,5 +109,5 @@ jobs:
           gh pr comment "$ISSUE_NUMBER" --body "π 已按评论更新。"
 
 # ⚠️ 安全提示：Issue/评论内容会进入 prompt，存在 prompt injection 风险。
-# 本 workflow 只在人工 @pi 时触发、产物仍需过 CI + 人工 review 才能合并（分支保护），
-# 请保持"AI 无合并权"的原则。更严格时可加 allowlist 只响应特定用户。
+# 已设身份门禁（仅 OWNER/COLLABORATOR 可触发）；产物仍需过 CI + 人工 review 才能合并，
+# 保持“AI 无合并权”原则。

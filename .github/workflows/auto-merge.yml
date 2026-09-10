@@ -15,6 +15,11 @@ permissions:
   contents: write # 合并 + 删分支
   pull-requests: write
 
+# 防轮询叠加：慢 run 跨过下一个 cron 点时排队执行，不并发双跑抢同一 PR
+concurrency:
+  group: auto-merge-sweep
+  cancel-in-progress: false
+
 jobs:
   merge:
     name: 扫描已签章 PR 并合并
@@ -37,10 +42,15 @@ jobs:
             echo "── PR #$NUM：检查当前状态 ──"
             # 只看真 CI 成绩：忽略本 workflow 自身产生的 check（pending/尸 fail 不再自锁），
             # 且只要还有非 SUCCESS 的真检查就跳过，下轮轮询再看
+            # 零 checks 的 PR（如 GITHUB_TOKEN 机器人开的）会让 gh pr checks 非零退出——
+            # set -e 下将炸死整个 sweep 循环，必须兜底为“跳过、下轮再看”
             NOT_GREEN=$(gh pr checks "$NUM" -R "$REPO" --json name,state \
-              --jq '[.[] | select(.name != "扫描已签章 PR 并合并") | select(.state != "SUCCESS")] | length')
+              --jq '[.[] | select(.name != "扫描已签章 PR 并合并") | select(.state != "SUCCESS")] | length' 2>/dev/null) || NOT_GREEN=1
             if [ "${NOT_GREEN:-1}" = "0" ]; then
-              gh pr merge "$NUM" -R "$REPO" --squash --delete-branch && echo "✅ #$NUM 已合并"
+              # 单个 PR 合并失败（ruleset 拒/冲突/竞态）只告警，不炸循环
+              gh pr merge "$NUM" -R "$REPO" --squash --delete-branch \
+                && echo "✅ #$NUM 已合并" \
+                || echo "::warning::#$NUM 合并被拒，下轮再看"
             else
               echo "::warning::PR #$NUM 有 $NOT_GREEN 项未全绿（真 CI），下轮再看"
             fi
