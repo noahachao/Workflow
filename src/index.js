@@ -18,6 +18,13 @@ export function greet(name) {
   return `你好，${name}！`;
 }
 
+export function modulo(a, b) {
+  if (b === 0) {
+    throw new Error("除数不能为 0");
+  }
+  return ((a % b) + b) % b;
+}
+
 export function multiply(a, b) {
   return a * b;
 }
