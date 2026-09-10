@@ -67,6 +67,7 @@ jobs:
         run: |
           npx -y @earendil-works/pi-coding-agent \
             --provider zai-coding-cn --model glm-5.3 \
+            --mode json \
             -p "
           你是在仓库中工作的 coding agent。遵守 AGENTS.md 的全部硬性规则。
 
