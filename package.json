@@ -1,6 +1,6 @@
 {
   "name": "ai-company-template",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "GitHub 一人公司 AI 自动化工具链模板（示例 Node.js 项目，可整体替换）",
   "type": "module",
