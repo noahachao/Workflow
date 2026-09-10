@@ -1,0 +1,36 @@
+# 标签式自动合并（免费替代 GitHub Pro 的分支保护 + auto-merge）
+# 用法：PR 上打 approved 标签 = 你的签章 → 本 workflow 等 CI 全绿 → 自动 squash 合并并删分支
+# 安全性：只有对仓库有写权限的人（你）能打标签；CI 有红灯则拒绝合并
+name: Auto Merge (approved)
+
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: write        # 合并 + 删分支
+  pull-requests: write
+
+jobs:
+  merge:
+    name: 等待检查通过后自动合并
+    # 仅当 PR 打了 approved 标签且处于打开状态
+    if: >-
+      github.event.pull_request.state == 'open' &&
+      contains(join(github.event.pull_request.labels.*.name, ','), 'approved')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 等 CI 全绿再合并
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+          echo "PR: $PR_URL（已签章 approved，开始等待检查）"
+          # --watch 持续等待所有检查结束：全绿退出 0，任何红灯非 0 → 本 job 失败，不合
+          if ! gh pr checks "$PR_URL" --watch --fail-fast --interval 15; then
+            echo "::error::存在未通过的检查，拒绝合并"
+            exit 1
+          fi
+          gh pr merge "$PR_URL" --squash --delete-branch
+          echo "✅ 已自动合并（squash）并删除分支"
