@@ -1,0 +1,34 @@
+# OSSF Scorecard：开源安全最佳实践评分（公开库专用，免费）
+# 作用：给仓库打安全成熟度分（0-10）并出徽章，可挂到 README 展示
+name: OSSF Scorecard
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1" # 每周一凌晨刷新（UTC）
+  workflow_dispatch:
+
+permissions:
+  security-events: write # 上传 SARIF 扫描结果
+  contents: read
+  id-token: write # 发布公开评分（api.scorecard.dev）
+
+jobs:
+  analysis:
+    # 私有库跑无意义且多项检查会失败，仅公开库执行
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 运行 Scorecard 分析
+        uses: ossf/scorecard-action@v2
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # 发布到公开排行榜（公开库专属福利，可获得徽章）
+          publish_results: true
+
+      - name: 上传 SARIF 到代码扫描
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif

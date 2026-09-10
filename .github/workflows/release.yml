@@ -1,10 +1,10 @@
-# Release：打 tag → 测试 → 构建 → GitHub Release → 部署（CD 挂载点）
-# 用法：git tag v0.1.0 && git push origin v0.1.0
+# Release：Release 发布 → 测试 → 构建 → 产物附加到该 Release → 部署（CD 挂载点）
+# 由 Release Please 触发（它负责版本号/CHANGELOG/tag/创建 Release，本流程负责产物与部署）
 name: Release
 
 on:
-  push:
-    tags: ["v*.*.*"]
+  release:
+    types: [published]
 
 permissions:
   contents: write # 创建 Release
@@ -24,10 +24,9 @@ jobs:
       - run: npm test
       - run: npm run build
 
-      - name: Create GitHub Release
+      - name: 附加构建产物到 Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true # 自动生成 changelog
           files: dist/**
 
       # ============ 部署段（按你的平台放开一个） ============
