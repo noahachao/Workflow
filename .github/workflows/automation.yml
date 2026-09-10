@@ -14,7 +14,7 @@ jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v11
         with:
           days-before-stale: 30       # 30 天无活动标记为 stale
           days-before-close: 7        # 再过 7 天仍无活动则关闭
