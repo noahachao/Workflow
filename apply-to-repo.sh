@@ -100,6 +100,21 @@ cp "$TEMPLATE_DIR/.github/workflows/release.yml" .github/workflows/
 cp "$TEMPLATE_DIR/.github/workflows/pi.yml" .github/workflows/
 [ -f "$TEMPLATE_DIR/.github/workflows/claude.yml" ] && cp "$TEMPLATE_DIR/.github/workflows/claude.yml" .github/workflows/
 
+# ── 2.5 标签式自动合并 / AI 审查 / 发布自动化 / Scorecard ──
+cp "$TEMPLATE_DIR/.github/workflows/auto-merge.yml"  .github/workflows/
+cp "$TEMPLATE_DIR/.github/workflows/pi-review.yml"   .github/workflows/ 2>/dev/null || true
+cp "$TEMPLATE_DIR/.github/workflows/scorecard.yml"    .github/workflows/ 2>/dev/null || true
+# release-please 仅 node 库（其他语言后续适配 release-type: python/go）
+[ "$LANG_TYPE" = node ] && cp "$TEMPLATE_DIR/.github/workflows/release-please.yml" .github/workflows/
+
+# 私有库：Actions 分钟有配额（免费 2000/月），sweep 轮询降频到每 6 小时；
+# 秒级收割用: gh workflow run auto-merge.yml -R <repo>，或等 labeled/synchronize 事件
+REPO_NAME=$(basename "$TARGET")
+if gh api "repos/$OWNER/$REPO_NAME" --jq .private 2>/dev/null | grep -q true; then
+  sed -i.bak 's|cron: "\*/5 \* \* \* \*"|cron: "0 */6 * * *"|' .github/workflows/auto-merge.yml && rm -f .github/workflows/auto-merge.yml.bak
+  echo "→ 私有库：sweep 降频为每 6 小时（省 Actions 配额）"
+fi
+
 # 不覆盖已有的 AGENTS.md / CLAUDE.md / coderabbit，存在则跳过
 for f in AGENTS.md CLAUDE.md .coderabbit.yaml .pre-commit-config.yaml; do
   [ -f "$f" ] || cp "$TEMPLATE_DIR/$f" .
