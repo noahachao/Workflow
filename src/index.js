@@ -10,3 +10,7 @@ export function add(a, b) {
 export function greet(name) {
   return `你好，${name}！`;
 }
+
+export function subtract(a, b) {
+  return a - b;
+}
