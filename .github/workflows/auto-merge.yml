@@ -14,6 +14,7 @@ on:
 permissions:
   contents: write # 合并 + 删分支
   pull-requests: write
+  issues: write # 合并后补刀关 issue（GITHUB_TOKEN 建 PR 的 Closes #N 被 GitHub 忽略）
 
 # 防轮询叠加：慢 run 跨过下一个 cron 点时排队执行，不并发双跑抢同一 PR
 concurrency:
