@@ -73,6 +73,6 @@ jobs:
           gh pr comment "$PR_NUMBER" --body-file /tmp/review.md
 
 # 说明：
-# - 没配置 GEMINI_API_KEY 时此 job 会失败；不想用 AI 审查可直接删除本文件。
+# - 没配置 GEMINI_API_KEY 时自动跳过（keycheck 探测，不发评论不报错）；想关掉 AI 审查可直接删除本文件。
 # - Dependabot 的 PR 也会被审查（其 token 可读 PR，评论不受限）。
 # - 想要更强审查质量：换 --provider anthropic + 对应 key（按量付费）。
