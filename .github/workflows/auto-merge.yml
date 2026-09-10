@@ -35,10 +35,13 @@ jobs:
           if [ -z "${PRS:-}" ]; then echo "无待合并 PR"; exit 0; fi
           for NUM in $PRS; do
             echo "── PR #$NUM：检查当前状态 ──"
-            # 单次快照：全绿退出 0；有 pending/红灯非 0 → 跳过，下轮轮询再看（不阻塞等待）
-            if gh pr checks "$NUM" -R "$REPO" --fail-fast; then
+            # 只看真 CI 成绩：忽略本 workflow 自身产生的 check（pending/尸 fail 不再自锁），
+            # 且只要还有非 SUCCESS 的真检查就跳过，下轮轮询再看
+            NOT_GREEN=$(gh pr checks "$NUM" -R "$REPO" --json name,state \
+              --jq '[.[] | select(.name != "扫描已签章 PR 并合并") | select(.state != "SUCCESS")] | length')
+            if [ "${NOT_GREEN:-1}" = "0" ]; then
               gh pr merge "$NUM" -R "$REPO" --squash --delete-branch && echo "✅ #$NUM 已合并"
             else
-              echo "::warning::PR #$NUM 检查未全绿（或尚在进行），下轮再看"
+              echo "::warning::PR #$NUM 有 $NOT_GREEN 项未全绿（真 CI），下轮再看"
             fi
           done
