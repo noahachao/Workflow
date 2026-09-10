@@ -92,6 +92,8 @@ cp -R "$TEMPLATE_DIR/.github/ISSUE_TEMPLATE/." .github/ISSUE_TEMPLATE/
 cp "$TEMPLATE_DIR/.github/PULL_REQUEST_TEMPLATE.md" .github/
 cp "$TEMPLATE_DIR/.github/dependabot.yml" .github/
 cp "$TEMPLATE_DIR/.github/labeler.yml" .github/
+# AGENTS.md：仅目标仓库没有时安装（已有的跳过——防止覆盖库特有规则，如 invoice-manager 的事故版铁律）
+[ -f AGENTS.md ] || cp "$TEMPLATE_DIR/AGENTS.md" .
 cp "$TEMPLATE_DIR/.github/workflows/codeql.yml" .github/workflows/
 cp "$TEMPLATE_DIR/.github/workflows/security.yml" .github/workflows/
 cp "$TEMPLATE_DIR/.github/workflows/automation.yml" .github/workflows/
