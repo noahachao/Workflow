@@ -109,7 +109,7 @@ cp "$TEMPLATE_DIR/.github/workflows/scorecard.yml"    .github/workflows/ 2>/dev/
 
 # 私有库：Actions 分钟有配额（免费 2000/月），sweep 轮询降频到每 6 小时；
 # 秒级收割用: gh workflow run auto-merge.yml -R <repo>，或等 labeled/synchronize 事件
-REPO_NAME=$(basename "$TARGET")
+REPO_NAME=$(git remote get-url origin | sed -E 's#.*github.com[:/]##; s#\.git$##; s#.*/##')
 if gh api "repos/$OWNER/$REPO_NAME" --jq .private 2>/dev/null | grep -q true; then
   sed -i.bak 's|cron: "\*/5 \* \* \* \*"|cron: "0 */6 * * *"|' .github/workflows/auto-merge.yml && rm -f .github/workflows/auto-merge.yml.bak
   echo "→ 私有库：sweep 降频为每 6 小时（省 Actions 配额）"
