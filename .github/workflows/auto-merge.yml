@@ -55,7 +55,9 @@ jobs:
                 || gh pr merge "$NUM" -R "$REPO" --squash --delete-branch --admin; then
                 echo "✅ #$NUM 已合并"
                 # GITHUB_TOKEN 创建的 PR，其 Closes #N 会被 GitHub 忽略（防机器人递归）——补刀关 issue
-                ISSUE=$(gh pr view "$NUM" -R "$REPO" --json title --jq '.title' | grep -oE '#[0-9]+' | head -1 | tr -d '#')
+                # 标题无 #数字（如纯中文标题）时 grep 退出 1，set -e+pipefail 会炸死整个 job
+                # （合并已成功却报 failure）——必须兜底
+                ISSUE=$(gh pr view "$NUM" -R "$REPO" --json title --jq '.title' | grep -oE '#[0-9]+' | head -1 | tr -d '#' || true)
                 if [ -n "$ISSUE" ]; then
                   gh issue close "$ISSUE" -R "$REPO" --comment "已由 PR #$NUM（@pi 自动实现）合并关闭。" >/dev/null 2>&1 \
                     && echo "✅ issue #$ISSUE 已随合并关闭" \
