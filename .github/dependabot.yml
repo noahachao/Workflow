@@ -17,6 +17,12 @@ updates:
     schedule:
       interval: "weekly"
     labels: ["dependencies"]
+    # minor/patch 合并成单 PR——一次 CI 验证一批，砍 80% 触发次数
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
     commit-message:
       prefix: "chore(deps)"
 
