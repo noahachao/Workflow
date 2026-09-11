@@ -27,7 +27,7 @@ jobs:
         # 按项目语言增删：javascript-typescript / python / go / java-kotlin ...
         language: [javascript-typescript]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
