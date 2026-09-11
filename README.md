@@ -7,7 +7,7 @@
 
 ```
             ┌─────────────────────────── 你（人类）───────────────────────────┐
-            │   写 Issue / 验收 / 最终 Approve & Merge                         │
+            │   写 Issue / 验收 / 打 approved 标签（= 人类签章）               │
             └───────────────▲───────────────────────────────▲─────────────────┘
                             │ 指派任务                        │ 审查结果
 ┌──────────┐   ┌───────────┴──────────┐   ┌─────────────────┴──────────────┐
@@ -18,20 +18,25 @@
                                            │  ④ 全绿 + auto-merge → main    │
                                            └────────────────┬───────────────┘
                                                             ▼
-                                              Release (tag v*) → CD 部署
+                            release-please 自动攒版 → Release PR → 再签章 → 发版 + 产物
 ```
 
 ## 仓库内容
 
 | 文件 / 目录 | 作用 | 需要的动作 |
 |---|---|---|
-| `.github/workflows/ci.yml` | CI：lint（pre-commit）+ 测试（Node 20/22 矩阵）+ 构建冒烟 | 无，开箱即用 |
+| `.github/workflows/ci.yml` | CI：lint（pre-commit）+ 测试（Node 22/24 矩阵）+ 构建冒烟 | 无，开箱即用 |
 | `.github/workflows/codeql.yml` | CodeQL 静态安全扫描（含定时扫描） | 无 |
 | `.github/workflows/labeler.yml` | PR 按改动路径自动打标签 | 无 |
 | `.github/workflows/automation.yml` | 定时清理不活跃 issue/PR（housekeeping） | 无 |
 | `.github/workflows/release.yml` | 打 tag 自动发布 GitHub Release（CD 挂载点） | 按需改部署段 |
-| `.github/workflows/claude.yml` | `@claude` 机器人：改代码 / 修 bug / 回答问题 | 配置 secret 后可用 |
-| `.github/workflows/pi.yml` | `@pi` 机器人：本地同款 pi agent 云端干活（Issue→PR / PR 迭代） | 配置任一模型 API key |
+| `.github/workflows/claude.yml` | `@claude` 机器人：改代码 / 修 bug / 回答问题 | 配置 `ANTHROPIC_API_KEY` |
+| `.github/workflows/auto-merge.yml` | **收割机**：带 `approved` 标签的 PR，CI 全绿自动 squash 合并+删分支+关 issue（每 5 分钟巡逻） | 无，开箱即用 |
+| `.github/workflows/pi-review.yml` | AI Review：每个新 PR 自动出中文逐行审查报告 | 配置 `GEMINI_API_KEY`（可选，未配自动跳过） |
+| `.github/workflows/security.yml` | 私有库安全兜底：Gitleaks 密钥扫描 + npm audit（critical 阻断） | 无 |
+| `.github/workflows/release-please.yml` | 自动版本管理：攒 conventional commits → Release PR → 打 tag 发版 | 无（node 库；打 `approved` 标签收割 Release PR） |
+| `.github/workflows/scorecard.yml` | OSSF 安全评分（仅公开库跑，SARIF 上 Security tab） | 无 |
+| `.github/workflows/pi.yml` | `@pi` 机器人：本地同款 pi agent 云端干活（Issue→PR / PR 迭代） | 配置 `ZAI_CODING_CN_API_KEY`（GLM Coding 套餐，默认）或 `DEEPSEEK_API_KEY` |
 | `.coderabbit.yaml` | CodeRabbit AI Code Review 配置 | 安装 CodeRabbit App（开源免费） |
 | `.github/dependabot.yml` | 依赖自动升级（npm + Actions） | 无 |
 | `.github/labeler.yml` | PR 打标签规则 | 无 |
@@ -65,9 +70,16 @@ pip install pre-commit && pre-commit install
 # 在 GitHub 上新建一个 Issue（用 feature 模板），assignee 选择 @copilot
 # → Copilot 后台开发，完成后提交 PR 给你审查
 
-# 或在任何 Issue / PR 评论里 @claude，让它：
+# 或在任何 Issue 评论里 @pi（主战 agent，GLM Coding 套餐包月）：
+#   "@pi 按此 issue 实现，附测试"      → 自动写码 → 开 PR → CI → 等你审批
+#
+# 或 @claude（需要 ANTHROPIC_API_KEY）：
 #   "@claude 帮我实现这个功能并附测试"
-#   "@claude 这个 PR 有什么问题？"
+#
+# 你批准 PR 的方式（二选一）：
+#   网页：PR 右侧栏 Labels 齿轮 → 勾 approved
+#   命令：gh pr edit <PR号> --add-label approved
+# 打完标签后 auto-merge 自动收割（CI 全绿 → 合并 → 关 issue）
 ```
 
 ## 成本参考
@@ -77,10 +89,12 @@ pip install pre-commit && pre-commit install
 | 本模板基础栈 | ¥0 | 公开仓库 Actions 免费 + CodeRabbit 开源免费 + CodeQL/Dependabot 免费 |
 | + Copilot Pro | ~$10 | coding agent + code review + IDE 补全 |
 | + Claude API（@claude） | 按 token | issue 分诊约 $0.015/条，review 每个 PR 几美分级别 |
+| + GLM Coding 套餐（@pi 默认） | 包月 | 智谱 aistudio 开通，套餐内 CI 用量不另计费 |
+| + DeepSeek（@pi 备用） | 按 token | 极便宜，一次 PR 实现通常 < ¥0.1 |
 
 ## 安全红线（一人公司必读）
 
-- **合并的最终权留给人**：AI 可以 review、可以提 PR，但分支保护要求人类 approve 才能合并（防 PR 文本里藏 prompt injection）。
+- **合并的最终权留给人**：AI 可以 review、可以提 PR，但只有人类打上 `approved` 标签后收割机才合并（防 PR 文本里藏 prompt injection）。机器人开的 PR 无 CI 记录时走 `--admin` 通道合并，签章语义不变。
 - Actions 尽量 **pin 到 commit SHA**（模板为可读性用了 tag，正式生产建议替换）。
 - 所有 secret 放 **GitHub Secrets**，开启 **Push Protection**。
 - AI 生成的代码必须过完 CI + 安全扫描才算数，`AGENTS.md` 里已写明此要求。
