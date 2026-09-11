@@ -7,7 +7,9 @@ repos:
       - id: trailing-whitespace        # 去行尾空格
       - id: end-of-file-fixer          # 文件末尾补换行
       - id: check-yaml                 # YAML 语法检查
-      - id: check-json                 # JSON 语法检查
+      # tsconfig*.json 是 JSONC（合法带注释/尾逗号），check-json 不认——排除
+      - id: check-json
+        exclude: '^(.*/)?tsconfig(\.[^/]+)?\.json$'
       - id: check-added-large-files    # 防误提交大文件
       - id: check-merge-conflict       # 防提交冲突标记
       - id: detect-private-key         # 防误提交私钥
