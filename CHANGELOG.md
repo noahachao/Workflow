@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/noahachao/Workflow/compare/v1.2.0...v1.2.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* sweep 关 issue 的 grep 无匹配兜底——纯中文标题 PR 合并后误报 failure ([#45](https://github.com/noahachao/Workflow/issues/45)) ([ee3b601](https://github.com/noahachao/Workflow/commit/ee3b601c87426b8b82e770acbe9a0e9b4ea118a5))
+
 ## [1.2.0](https://github.com/noahachao/Workflow/compare/v1.1.0...v1.2.0) (2026-09-11)
 
 
