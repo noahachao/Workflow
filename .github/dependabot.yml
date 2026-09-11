@@ -2,8 +2,7 @@
 # 文档：https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 version: 2
 updates:
-  # GitHub Actions 自身升级（workflow 里用的 action 版本）
-  - package-ecosystem: "github-actions"
+  # GitHub Actions 自身升级（workflow 里用的 action 版本）  - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -12,6 +11,9 @@ updates:
       prefix: "chore(deps)"
 
   # npm 依赖升级
+    ignore-conditions:
+      - dependency-name: "googleapis/release-please-action"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -33,3 +35,26 @@ updates:
   # - package-ecosystem: "docker"
   #   directory: "/"
   #   schedule: { interval: "weekly" }
+    ignore-conditions:
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "echarts"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jsdom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "nodemailer"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@testing-library/jest-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vue-router"
+        update-types: ["version-update:semver-major"]
