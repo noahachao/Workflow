@@ -15,7 +15,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         with:
           # PAT（= 仓库主人身份）创建 tag/Release —— GITHUB_TOKEN 打的 tag 不触发
           # 其他 workflow（防火墙），导致 release.yml 产物挂载永不运行
