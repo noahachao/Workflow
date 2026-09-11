@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/noahachao/Workflow/compare/v1.1.0...v1.2.0) (2026-09-11)
+
+
+### Features
+
+* 三 workflow 切 WORKFLOW_PAT——拆 GITHUB_TOKEN 三面墙：sweep admin 合并生效 / release-please tag 触发产物挂载 / pi 分支 push 触发 CI ([#41](https://github.com/noahachao/Workflow/issues/41)) ([f3fccd6](https://github.com/noahachao/Workflow/commit/f3fccd67da363df7bcca05883041c1f0bfd4755a))
+
 ## [1.1.0](https://github.com/noahachao/Workflow/compare/v1.0.1...v1.1.0) (2026-09-11)
 
 
