@@ -5,8 +5,18 @@ name: CI
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".gitignore"
+      - ".pre-commit-config.yaml"
   push:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".gitignore"
+      - ".pre-commit-config.yaml"
 
 # 同一 PR 新 push 时取消旧任务，省额度
 concurrency:
