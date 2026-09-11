@@ -17,6 +17,9 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         with:
+          # PAT（= 仓库主人身份）创建 tag/Release —— GITHUB_TOKEN 打的 tag 不触发
+          # 其他 workflow（防火墙），导致 release.yml 产物挂载永不运行
+          token: ${{ secrets.WORKFLOW_PAT }}
           # 单包 node 项目；其他语言仓库 apply 时按需改（python/go/rust 同样支持）
           release-type: node
           # Release PR 标题与正文风格

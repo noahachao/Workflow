@@ -33,7 +33,8 @@ jobs:
     steps:
       - name: 扫描带 approved 标签的 PR，等 CI 全绿后合并
         env:
-          GH_TOKEN: ${{ github.token }}
+          # PAT（用户身份）：--admin 通道 + bypass ruleset；GITHUB_TOKEN 无此权限
+          GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail

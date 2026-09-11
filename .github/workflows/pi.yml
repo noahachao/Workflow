@@ -39,7 +39,7 @@ jobs:
 
       - name: Prepare branch (issue vs PR context)
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           git config user.name "pi-bot"
@@ -58,7 +58,7 @@ jobs:
           # ★ 默认走智谱 GLM Coding 套餐（包月）；想切 DeepSeek 改 --provider deepseek
           ZAI_CODING_CN_API_KEY: ${{ secrets.ZAI_CODING_CN_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
           COMMENT: ${{ github.event.comment.body }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -86,7 +86,7 @@ jobs:
       - name: Push & open PR (issue 场景)
         if: env.CONTEXT == 'issue'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           # 检测产出：比较当前分支与 main 的 commit 差（pi 会先 commit，工作区可能已干净）
@@ -103,7 +103,7 @@ jobs:
       - name: Push updates (PR 场景)
         if: env.CONTEXT == 'pr'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           # 同上：以 commit 差为准；若有未提交改动（pi 未 commit）则补一个 commit
