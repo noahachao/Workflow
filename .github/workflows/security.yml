@@ -35,8 +35,14 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: npm audit（critical 漏洞阻断；high 级建议立 issue 走升级流程，避免大版本强制升级破坏兼容）
+          # 不用 cache: npm——无 package-lock 的库会炸（setup-node 要求 lock 存在）
+      # 无 package-lock.json 的库（python/go 等）自动跳过；critical 漏洞阻断，
+      # high 级建议立 issue 走升级流程，避免大版本强制升级破坏兼容
+      - name: npm audit（npm ci + audit）
         run: |
+          if [ ! -f package-lock.json ]; then
+            echo "非 node 项目，跳过 npm audit"
+            exit 0
+          fi
+          npm ci
           npm audit --audit-level=critical
