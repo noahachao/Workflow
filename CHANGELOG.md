@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/noahachao/Workflow/compare/v1.2.1...v1.3.0) (2026-09-11)
+
+
+### Features
+
+* **index:** 增加 abs(n) 绝对值函数 ([#43](https://github.com/noahachao/Workflow/issues/43)) ([#44](https://github.com/noahachao/Workflow/issues/44)) ([d0b5233](https://github.com/noahachao/Workflow/commit/d0b52336b0cc56a441fe17a877fef4a4961a34c7))
+
 ## [1.2.1](https://github.com/noahachao/Workflow/compare/v1.2.0...v1.2.1) (2026-09-11)
 
 
