@@ -7,6 +7,10 @@ export function add(a, b) {
   return a + b;
 }
 
+export function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
 export function divide(a, b) {
   if (b === 0) {
     throw new Error("除数不能为 0");
