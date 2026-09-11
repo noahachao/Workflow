@@ -3,6 +3,10 @@
  * 保持零依赖 + 纯函数风格，方便 AI agent 理解与测试。
  */
 
+export function abs(n) {
+  return Math.abs(n);
+}
+
 export function add(a, b) {
   return a + b;
 }
