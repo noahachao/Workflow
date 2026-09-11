@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/noahachao/Workflow/compare/v1.3.0...v1.3.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* npm audit 跳过无 package-lock 的库（python 等非 node 项目误挂） ([#49](https://github.com/noahachao/Workflow/issues/49)) ([e32855d](https://github.com/noahachao/Workflow/commit/e32855dff9d6eeb7f37f5999bdd105f2d1a13f0a))
+* pre-commit check-json 排除 tsconfig（JSONC 合法语法被误报） ([#48](https://github.com/noahachao/Workflow/issues/48)) ([cf30387](https://github.com/noahachao/Workflow/commit/cf3038757290a3a637570821963b80e7f5950c71))
+
 ## [1.3.0](https://github.com/noahachao/Workflow/compare/v1.2.1...v1.3.0) (2026-09-11)
 
 
