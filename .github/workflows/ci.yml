@@ -3,13 +3,10 @@
 name: CI
 
 on:
+  # PR 一律全跑:required checks 在纯文档 PR 上不出现会被 ruleset 卡死
+  # (省额度只省 push 侧:main 上的文档改动不重复跑)
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - ".gitignore"
-      - ".pre-commit-config.yaml"
   push:
     branches: [main]
     paths-ignore:
@@ -31,12 +28,12 @@ jobs:
     name: Lint (pre-commit)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         if: ${{ github.server_url == 'https://github.com' }}
         with:
           python-version: "3.12"
-      - uses: pre-commit/action@v3.0.1 # 自动安装并运行 .pre-commit-config.yaml 里全部 hooks（该仓库无 v3 浮动 tag，必须 pin 小版本）
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # 自动安装并运行 .pre-commit-config.yaml 里全部 hooks（该仓库无 v3 浮动 tag，必须 pin 小版本）
 
   test:
     name: Test (Node ${{ matrix.node }})
@@ -46,23 +43,23 @@ jobs:
       matrix:
         node: [22, 24] # 24 为当前 LTS
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ matrix.node }}
           cache: npm
       # 统一 npm 大版本：npm 10/11 对 lock 的树校验不兼容
       # （lock 常由本地 npm 11 生成，CI 若用 npm 10 会报 Missing: xxx）
       - run: npm install -g npm@11
-      - run: npm ci || npm install
+      - run: npm ci
       - run: npm test
 
   build:
     name: Build smoke
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
           cache: npm
@@ -70,7 +67,7 @@ jobs:
       - run: npm run build
 
       # 可选：构建产物上传（供 release / 部署 job 复用）
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: dist-${{ github.sha }}
           path: dist/

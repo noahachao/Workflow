@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 运行 Scorecard 分析
-        uses: ossf/scorecard-action@v2.4.4
+        uses: ossf/scorecard-action@55891bbd73f2425e97637d96e306fc9d491d0b21
         with:
           results_file: results.sarif
           results_format: sarif
@@ -28,6 +28,6 @@ jobs:
           publish_results: false
 
       - name: 上传 SARIF 到代码扫描
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@7999b86c43a865dc79d8923397f35af22de63401
         with:
           sarif_file: results.sarif
