@@ -43,3 +43,18 @@
 
 - 只做 Issue 里明确要求的事，不顺手重构无关代码。
 - 拿不准就在 PR 描述里列出假设，不要替人类做产品决定。
+
+## GitHub Actions / 流水线运维纪律
+- 批量改动 9 库前先查 Actions 分钟余额(`gh api /users/…/settings/billing/actions`,token 不足时用网页确认);能合并的变更合并成一次 push,一轮 CI 验证多变更
+- 批量同步模板文件后必须立即 grep 抽验关键内容(如 action 版本),cp 前先核对源分支是否包含目标改动;一次 cp 用错分支曾把 8 库 actions 从 v7 降回 v4
+- 配置文件不得无脑模板化:dependabot.yml 的 package-ecosystem/directory 必须按库实际结构裁剪(如 rush 的 npm 在 /web、go 在 /scheduler;langgraph 只有 pip),错配会报 "/package.json not found"
+- Dependabot 的 ignore 是库级策略:关闭 major PR 时必须在每个库的 dependabot.yml 硬编码 ignore-conditions,不能只靠 `@dependabot ignore` 评论(同款 major PR 会在其他库重复开出)
+- push 成功与否必须用远端 SHA 核对(`git rev-parse HEAD` vs `gh api repos/…/branches/main`),禁止无条件 echo 假成功;SSH 断连时 push 可能未达
+- 批量验证 CI 用 SHA 对账 + `--workflow X --event push` 精确过滤;run 列表会被 Dependabot rebase 洪水挤出窗口,单次列表查询不可信
+- 额度耗尽期的失败 run 特征是 job 3 秒内结束、无 step 失败、annotations 提示 billing——定性平台额度问题,等月度重置或加付款,勿当 workflow bug 修
+- 开新 PR 前分支必须基于最新 origin/main(rebase 或 -B 重建);基于旧 main 的 diff 会与已合入的同名变更在 PR merge ref 上撞车,报出本地不存在的错误(如 duplicate key),本地文件检查无法发现,必须在 PR checks 层验证
+- dependabot.yml 用户配置键是 `ignore`(不是 dependabot-core 内部 JSON 的 `ignore-conditions`);写错键名校验器直接 fail 且静默停摆。配置依据官方 options reference,不依据 job 日志里的内部字段
+- 生成结构化配置文件优先 heredoc 直写完整内容;字符串拼接/split 手术易坏缩进与结构且不易自劯,二连败后改 heredoc 一次成型 + 本地 yaml 解析 + pre-commit 验证再推
+- 模板库 ruleset 只要求 checks 绿,工具链 chore PR(checks 绿后)可 `gh pr merge --squash --delete-branch` 直合,无需 approved 标签;业务 PR 仍走用户签章流
+- main 分支直推仅限 CI 热修(阻断性红灯),常规改动一律开 PR;直推后当天在最近 PR/issue 补一笔说明
+- WORKFLOW_PAT 仅用于 auto-merge 与 pi 机器人,不得用于人工日常操作;泄露迹象时立即 revoke 并换 fine-grained PAT
