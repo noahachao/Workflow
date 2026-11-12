@@ -15,6 +15,7 @@ permissions:
   contents: write # 合并 + 删分支
   pull-requests: write
   issues: write # 合并后补刀关 issue（GITHUB_TOKEN 建 PR 的 Closes #N 被 GitHub 忽略）
+  actions: write # 配额守卫自禁用时的兑底令牌（PAT 优先）
 
 # 防轮询叠加：慢 run 跨过下一个 cron 点时排队执行，不并发双跑抢同一 PR
 concurrency:
@@ -31,7 +32,47 @@ jobs:
        contains(join(github.event.pull_request.labels.*.name, ','), 'approved'))
     runs-on: ubuntu-latest
     steps:
+      # 配额守卫：GitHub Free 每月含 2000 分钟，耗尽后 job 拒启但 run 照常创建 → 每天一封失败邮件轰炸。
+      # 守卫在还能跑的时候自查余额，低于阈值就自禁用（exit 0 静默，不发失败通知），
+      # 等每月 1 日由 quota-resume.yml 自动重启（免费额度按自然月重置）。
+      # 计费 API 需 PAT 的 user 权限——WORKFLOW_PAT 没有时降级为“查不到就继续跑”（守卫失效但不影响合并）。
+      - id: quota
+        name: 配额守卫（余额不足自禁用，月初自动恢复）
+        env:
+          GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          THRESHOLD=150
+          BILLING=$(gh api "/users/${GITHUB_ACTOR}/settings/billing/actions" 2>/dev/null) || BILLING=""
+          if [ -z "$BILLING" ]; then
+            echo "计费 API 不可用（PAT 缺 user 权限），跳过守卫继续执行"
+            echo "stop=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          INCLUDED=$(echo "$BILLING" | jq -r '.included_minutes')
+          USED=$(echo "$BILLING" | jq -r '.total_minutes_used')
+          LEFT=$((INCLUDED - USED))
+          echo "本月已用 ${USED}/${INCLUDED} 分钟，剩余 ${LEFT}（阈值 ${THRESHOLD}）"
+          if [ "$LEFT" -ge "$THRESHOLD" ]; then
+            echo "stop=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "余额低于阈值，自禁用 auto-merge，等下月 1 日 quota-resume 重启"
+          if ! gh api -X PUT "repos/${REPO}/actions/workflows/auto-merge.yml/disable" 2>/dev/null; then
+            if ! curl -fsSL -X PUT -H "Authorization: Bearer ${FALLBACK_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${REPO}/actions/workflows/auto-merge.yml/disable"; then
+              echo "::warning::自禁用失败（两种令牌均被拒），守卫退出但下轮 sweep 可能继续消耗配额"
+              echo "stop=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "✅ 已自禁用，恢复静默"
+          echo "stop=true" >> "$GITHUB_OUTPUT"
       - name: 扫描带 approved 标签的 PR，等 CI 全绿后合并
+        if: steps.quota.outputs.stop != 'true'
         env:
           # PAT（用户身份）：--admin 通道 + bypass ruleset；GITHUB_TOKEN 无此权限
           GH_TOKEN: ${{ secrets.WORKFLOW_PAT }}

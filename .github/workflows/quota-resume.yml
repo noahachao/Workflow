@@ -1,0 +1,50 @@
+# 配额月度恢复（卫星版）：GitHub Free 每月 2000 Actions 分钟，按自然月重置。
+# auto-merge 的配额守卫在余额 < 150 分钟时自禁用，本 workflow 每月 1 日
+# 扫描 API 动态枚举并重新启用全部被禁用的 workflow（无需维护清单），
+# 形成「额度不足自停 → 下月 1 日自动恢复」。
+# 舰队联动：本仓整仓 Actions 被关时由队长库 Cash-Flow-Management 的 quota-resume 负责唤醒。
+# 兜底链：GITHUB_TOKEN（actions:write）→ WORKFLOW_PAT。
+# 02:00 失败（额度锚点罕见偏移）时 12:00 自动重试；也可 workflow_dispatch 手动触发。
+name: Quota Resume
+
+on:
+  schedule:
+    - cron: "0 2,12 1 * *" # 每月 1 日 02:00/12:00 UTC（北京 10:00/20:00），幂等重试
+  workflow_dispatch: # 手动恢复用
+
+permissions:
+  actions: write # 重新启用被配额守卫禁用的 workflow
+
+concurrency:
+  group: quota-resume
+  cancel-in-progress: false
+
+jobs:
+  resume:
+    name: 重新启用被配额守卫禁用的 workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: 枚举并启用所有非 active 的 workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAT: ${{ secrets.WORKFLOW_PAT }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          gh api "repos/${REPO}/actions/workflows" --paginate --jq '.workflows[].path' | while read -r P; do
+            WF=$(basename "$P")
+            STATE=$(gh api "repos/${REPO}/actions/workflows/${WF}" --jq '.state' 2>/dev/null) || STATE=unknown
+            if [ "$STATE" = active ]; then
+              echo "– ${WF} 已启用"
+              continue
+            fi
+            if gh api -X PUT "repos/${REPO}/actions/workflows/${WF}/enable" 2>/dev/null; then
+              echo "✅ GITHUB_TOKEN 启用 ${WF}"
+            elif curl -fsSL -X PUT -H "Authorization: Bearer ${PAT}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${REPO}/actions/workflows/${WF}/enable"; then
+              echo "✅ WORKFLOW_PAT 启用 ${WF}"
+            else
+              echo "::error::${WF} 两种令牌均无法启用（token 需要 actions:write）"
+            fi
+          done
