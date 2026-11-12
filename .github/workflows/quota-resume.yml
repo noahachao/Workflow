@@ -31,7 +31,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -uo pipefail
-          gh api "repos/${REPO}/actions/workflows" --paginate --jq '.workflows[].path' | while read -r P; do
+          gh api "repos/${REPO}/actions/workflows" --paginate --jq '.workflows[].path' 2>/dev/null | while read -r P; do
             WF=$(basename "$P")
             case "$WF" in release.yml|dependabot-updates) echo "– 跳过 ${WF}（人工保持禁用）"; continue;; esac
             STATE=$(gh api "repos/${REPO}/actions/workflows/${WF}" --jq '.state' 2>/dev/null) || STATE=unknown
