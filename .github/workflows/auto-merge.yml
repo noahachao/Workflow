@@ -1,6 +1,6 @@
 # 标签式自动合并（免费替代 GitHub Pro 的分支保护 + auto-merge）
 # 用法：PR 上打 approved 标签 = 你的签章 → 本 workflow 等 CI 全绿 → 自动 squash 合并并删分支
-# 双通道：①事件触发（打标签/新提交，秒级） ②每 5 分钟轮询兜底（API 打标签不触发 labeled 事件的怪癖免疫）
+# 双通道：①事件触发（打标签/新提交，秒级） ②每日轮询兜底（API 打标签不触发 labeled 事件的怪癖免疫）
 # 安全性：只有对仓库有写权限的人（你）能打标签；CI 有红灯则拒绝合并
 name: Auto Merge (approved)
 
@@ -8,7 +8,7 @@ on:
   pull_request:
     types: [labeled, synchronize, reopened]
   schedule:
-    - cron: "*/5 * * * *" # 轮询兜底：扫一遍所有带 approved 标签的开放 PR
+    - cron: "0 5 * * *" # 轮询兜底：扫一遍所有带 approved 标签的开放 PR
   workflow_dispatch: # 支持手动触发（测试用）
 
 permissions:
