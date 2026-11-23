@@ -28,6 +28,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         if: steps.keycheck.outputs.ok == 'true'
         with:
+          persist-credentials: false
           fetch-depth: 0 # 需要 diff 历史
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -37,8 +38,10 @@ jobs:
 
       - name: Generate diff
         if: steps.keycheck.outputs.ok == 'true'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr.diff
+          git diff origin/"$BASE_REF"...HEAD > /tmp/pr.diff
           wc -l /tmp/pr.diff
           # 防超长：截断到 50K 字符（约 1500 行）
           head -c 50000 /tmp/pr.diff > /tmp/pr_trunc.diff
