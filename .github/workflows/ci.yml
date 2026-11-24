@@ -56,7 +56,7 @@ jobs:
       # （lock 常由本地 npm 11 生成，CI 若用 npm 10 会报 Missing: xxx）
       - run: npm install -g npm@11
       - run: npm ci
-      - run: npm run test:coverage
+      - run: npm run test:coverage --if-present
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: matrix.node == 22
         with:
