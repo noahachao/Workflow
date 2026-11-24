@@ -1,5 +1,5 @@
 rules:
   dangerous-triggers:
-    ignores:
+    ignore:
       - "claude.yml"
       - "pi.yml"
