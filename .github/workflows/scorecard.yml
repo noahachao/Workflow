@@ -28,6 +28,6 @@ jobs:
           publish_results: false
 
       - name: 上传 SARIF 到代码扫描
-        uses: github/codeql-action/upload-sarif@7999b86c43a865dc79d8923397f35af22de63401
+        uses: github/codeql-action/upload-sarif@38112626f97ac1fd7acf3df7ebca51f4677c1b38
         with:
           sarif_file: results.sarif
